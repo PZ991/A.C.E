@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Processor Test</title>
+</head>
+<body>
+    <h1>Word Processor Test Results</h1>
+    <pre id="output"></pre>
+
+    <script>
+        // Redirect console.log to display in the page
+        const output = document.getElementById('output');
+        const originalLog = console.log;
+        console.log = function(...args) {
+            output.textContent += args.join(' ') + '\n';
+            originalLog.apply(console, args);
+        };
+    </script>
+    <script src="wordprocessor.js"></script>
+</body>
+</html> 

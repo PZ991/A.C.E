@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Engine - Override Operations</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn.active {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4CAF50;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .game-world {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .world-canvas {
+            width: 100%;
+            height: 500px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .object {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .object.player {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: 3px solid #2E7D32;
+        }
+
+        .object.enemy {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+            border: 3px solid #B71C1C;
+        }
+
+        .object.sword {
+            background: linear-gradient(45deg, #C0C0C0, #A0A0A0);
+            color: #333;
+            border: 3px solid #666;
+        }
+
+        .object.shield {
+            background: linear-gradient(45deg, #8B4513, #A0522D);
+            color: white;
+            border: 3px solid #654321;
+        }
+
+        .object.pill {
+            background: linear-gradient(45deg, #FF69B4, #FF1493);
+            color: white;
+            border: 3px solid #C71585;
+        }
+
+        .object.demon {
+            background: linear-gradient(45deg, #8B0000, #B22222);
+            color: white;
+            border: 3px solid #800000;
+        }
+
+        .object:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .object.selected {
+            z-index: 20;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+        }
+
+        .object.dragging {
+            z-index: 30;
+            cursor: grabbing;
+            transform: scale(1.2);
+        }
+
+        .range-indicator {
+            position: absolute;
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .range-indicator.active {
+            border-color: rgba(255,255,0,0.6);
+            background: rgba(255,255,0,0.1);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .panel h3 {
+            margin: 0 0 15px 0;
+            color: #fff;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .object-info {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+
+        .object-info.player { border-left-color: #4CAF50; }
+        .object-info.enemy { border-left-color: #f44336; }
+        .object-info.sword { border-left-color: #C0C0C0; }
+        .object-info.shield { border-left-color: #8B4513; }
+        .object-info.pill { border-left-color: #FF69B4; }
+        .object-info.demon { border-left-color: #8B0000; }
+
+        .object-info h4 {
+            margin: 0 0 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tag {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .property {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .property-value {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .log-entry {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 13px;
+            border-left: 3px solid;
+            animation: slideIn 0.3s ease;
+        }
+
+        .log-entry.info { border-left-color: #2196F3; }
+        .log-entry.success { border-left-color: #4CAF50; }
+        .log-entry.warning { border-left-color: #FF9800; }
+        .log-entry.error { border-left-color: #f44336; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            display: inline-block;
+        }
+
+        .status-indicator.running {
+            background: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.stopped {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px #4CAF50; }
+            50% { box-shadow: 0 0 20px #4CAF50; }
+            100% { box-shadow: 0 0 5px #4CAF50; }
+        }
+
+        .health-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        .tick-counter {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #fff;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Game Engine - Override Operations</h1>
+            <p>Using override operations with proper Value objects</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn">▶️ Start Engine</button>
+            <button class="btn" id="stopBtn">⏹️ Stop Engine</button>
+            <button class="btn" id="resetBtn">🔄 Reset Objects</button>
+            
+            <div style="display: inline-block; margin: 0 10px;">
+                <select id="objectTypeSelect" style="padding: 8px; border-radius: 15px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.2); color: white; font-weight: bold;">
+                    <option value="player">👤 Player</option>
+                    <option value="sword">⚔️ Sword</option>
+                    <option value="shield">🛡️ Shield</option>
+                    <option value="pill">💊 Pill</option>
+                    <option value="demon">👹 Demon</option>
+                </select>
+                <button class="btn" id="addObjectBtn">➕ Add Object</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="game-world">
+                <h3>🌍 Game World</h3>
+                <div class="world-canvas" id="worldCanvas"></div>
+            </div>
+
+            <div class="sidebar">
+                <div class="panel">
+                    <h3><span class="status-indicator stopped" id="statusIndicator"></span>Engine Status</h3>
+                    <div class="tick-counter">Tick: <span id="tickCounter">0</span></div>
+                    <div class="property">
+                        <span>Objects:</span>
+                        <span class="property-value" id="objectCount">0</span>
+                    </div>
+                    <div class="property">
+                        <span>Active Operations:</span>
+                        <span class="property-value" id="operationCount">0</span>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>📊 Object Details</h3>
+                    <div id="objectDetails"></div>
+                </div>
+
+                <div class="panel">
+                    <h3>📜 Activity Log</h3>
+                    <div id="activityLog" style="max-height: 300px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Creates a 3D vector with x, y, z coordinates for positioning and distance calculations
+        class Vector3 {
+            constructor(x = 0, y = 0, z = 0) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            }
+            
+            // Calculates the 3D distance between this vector and another vector
+            distance(other) {
+                const dx = this.x - other.x;
+                const dy = this.y - other.y;
+                const dz = this.z - other.z;
+                return Math.sqrt(dx * dx + dy * dy + dz * dz);
+            }
+        }
+
+        // Returns a default type string for value classification
+        function Type() {
+            return 'default';
+        }
+
+        // Factory function that creates and returns a new Value instance
+        function Values() {
+            return new Value();
+        }
+
+        class Value {
+            constructor(key, value) {
+                this.iskeycode = false;
+                this.key = '';
+                this.value = '';
+                this.type = Type();
+                this.valueobject = null;
+            }
+        }   
+
+        class Operation {
+            constructor(key, value) {
+                this.activator = new Activator();
+                this.valuetarget = new Value();
+                this.targetself = false;
+                this.valuetarget2 = new Value();
+                this.targetself2 = false;
+                this.overrideoperation = '';
+            }
+        }
+
+        class Activator {
+            constructor(key, value) {
+                this.operation = 'greater than';
+                this.activation = 'Onhit';
+                this.activatedby = new MultiType();
+                this.distancevalmin = 0.5;
+                this.distancevalmax = 0.5;
+                this.maxdistance = 100;
+                this.mindistance = 10;
+            }
+        }
+
+        class CommandValue {
+            constructor() {
+                this.activator = new Activator();
+                this.values = [new Values()];
+                this.targetClass = '';
+                this.targetfunction = '';
+                this.filepath = '';
+            }
+        }
+
+        class MultiType {
+            constructor(key, value) {
+                this.types = ['type1,type2'];
+                this.mode = 'dynamic';
+                this.excludetype = '';
+            } 
+        }
+
+        class Spawning {
+            constructor(key, value) {
+                this.tospawn = [];
+                this.activationkey = '';
+                this.referencespawnerobject = null;
+                this.facetarget = false;
+                this.isprojectile = false; 
+                this.undergroundspawn = false;
+                this.minspawnpos = new Vector3();
+                this.maxspawnpos = new Vector3();
+            }
+        }
+
+        class Object {
+            constructor(key, value) {
+                this.values = [new Values()];
+                this.operations = [];
+                this.tags = [''];
+                this.spawning = new Spawning();
+                this.position = new Vector3();
+                this.id = Math.random().toString(36).substr(2, 9);
+            }
+        }
+
+        // ORIGINAL GameEngine class with override operation support
+        class GameEngine {
+            constructor(ui = null) {
+                this.objects = [];
+                this.globalVariables = {};
+                this.running = false;
+                this.tickInterval = null;
+                this.ui = ui;
+                this.tickCount = 0;
+                this.operationCount = 0;
+            }
+
+            addObject(obj) {
+                this.objects.push(obj);
+                console.log(`Added object with ID: ${obj.id}`);
+                if (this.ui) {
+                    this.ui.addLogEntry(`Added ${obj.tags[0]} object`, 'success');
+                    this.ui.updateUI();
+                }
+            }
+
+            removeObject(id) {
+                const objIndex = this.objects.findIndex(obj => obj.id === id);
+                if (objIndex !== -1) {
+                    const obj = this.objects[objIndex];
+                    this.objects.splice(objIndex, 1);
+                    console.log(`Removed object with ID: ${id}`);
+                    if (this.ui) {
+                        this.ui.addLogEntry(`Removed ${obj.tags[0]} object`, 'warning');
+                        this.ui.updateUI();
+                    }
+                }
+            }
+
+            getValue(obj, valueSpec) {
+                if (valueSpec.iskeycode) {
+                    return this.globalVariables[valueSpec.key] || 0;
+                } else if (valueSpec.valueobject) {
+                    return valueSpec.valueobject[valueSpec.key] || valueSpec.value;
+                } else {
+                    return obj[valueSpec.key] || valueSpec.value;
+                }
+            }
+
+            setValue(obj, valueSpec, newValue) {
+                if (valueSpec.iskeycode) {
+                    this.globalVariables[valueSpec.key] = newValue;
+                } else if (valueSpec.valueobject) {
+                    valueSpec.valueobject[valueSpec.key] = newValue;
+                } else {
+                    obj[valueSpec.key] = newValue;
+                }
+            }
+
+            checkDistance(obj1, obj2, activator) {
+                const distance = obj1.position.distance(obj2.position);
+                return distance >= activator.mindistance && distance <= activator.maxdistance;
+            }
+
+            matchesType(obj, multiType) {
+                if (!obj.tags || obj.tags.length === 0) return false;
+                
+                const excludeTypes = multiType.excludetype.split(',').filter(t => t.trim());
+                const targetTypes = multiType.types[0].split(',').filter(t => t.trim());
+                
+                for (let tag of obj.tags) {
+                    if (excludeTypes.includes(tag)) return false;
+                }
+                
+                switch (multiType.mode) {
+                    case 'dynamic':
+                        return targetTypes.some(type => obj.tags.includes(type));
+                    case 'sole':
+                        return targetTypes.every(type => obj.tags.includes(type)) && obj.tags.length === targetTypes.length;
+                    case 'static':
+                        return targetTypes.every(type => obj.tags.includes(type));
+                    default:
+                        return false;
+                }
+            }
+
+            evaluateOperation(operation, sourceObj, targetObj = null) {
+                // Use override operation if available
+                if (operation.overrideoperation) {
+                    try {
+                        // Create a safer eval context with access to engine methods
+                        const evalContext = {
+                            sourceObj,
+                            targetObj,
+                            engine: this,
+                            removeObject: (id) => this.removeObject(id),
+                            addLogEntry: (msg, type) => this.ui && this.ui.addLogEntry(msg, type)
+                        };
+                        
+                        // Execute override operation with context
+                        const func = new Function('sourceObj', 'targetObj', 'engine', 'removeObject', 'addLogEntry', operation.overrideoperation);
+                        return func.call(this, sourceObj, targetObj, this, evalContext.removeObject, evalContext.addLogEntry);
+                    } catch (e) {
+                        console.error('Override operation failed:', e);
+                        return false;
+                    }
+                }
+
+                // Fall back to standard operations
+                const value1 = this.getValue(operation.targetself ? sourceObj : targetObj, operation.valuetarget);
+                const value2 = this.getValue(operation.targetself2 ? sourceObj : targetObj, operation.valuetarget2);
+
+                switch (operation.activator.operation) {
+                    case 'greater than': return value1 > value2;
+                    case 'less than': return value1 < value2;
+                    case 'equal to': return value1 === value2;
+                    case 'not equal to': return value1 !== value2;
+                    case 'greater than or equal to': return value1 >= value2;
+                    case 'less than or equal to': return value1 <= value2;
+                    case 'or': return value1 || value2;
+                    case 'and': return value1 && value2;
+                    case 'xor': return !!(value1 ^ value2);
+                    case 'add': return value1 + value2;
+                    case 'minus': return value1 - value2;
+                    case 'divide': return value2 !== 0 ? value1 / value2 : 0;
+                    case 'multiply': return value1 * value2;
+                    case 'modulus': return value2 !== 0 ? value1 % value2 : 0;
+                    default: return false;
+                }
+            }
+
+            processActivation(obj, activator, otherObj = null) {
+                switch (activator.activation) {
+                    case 'Always':
+                        return true;
+                    case 'Onhit':
+                    case 'Overlap':
+                        return otherObj && this.checkDistance(obj, otherObj, activator) && 
+                               this.matchesType(otherObj, activator.activatedby);
+                    case 'inradius':
+                        return this.objects.some(other => 
+                            other.id !== obj.id && 
+                            this.checkDistance(obj, other, activator) && 
+                            this.matchesType(other, activator.activatedby)
+                        );
+                    default:
+                        return false;
+                }
+            }
+
+            processObject(obj) {
+                console.log(`Processing object ${obj.id} with tags: [${obj.tags.join(', ')}]`);
+                
+                for (let operation of obj.operations) {
+                    let activated = false;
+                    let targetObj = null;
+
+                    if (operation.activator.activation === 'Always') {
+                        activated = true;
+                    } else {
+                        for (let other of this.objects) {
+                            if (other.id !== obj.id && this.processActivation(obj, operation.activator, other)) {
+                                activated = true;
+                                targetObj = other;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (activated) {
+                        this.operationCount++;
+                        const result = this.evaluateOperation(operation, obj, targetObj);
+                        console.log(`Operation result for ${obj.id}: ${result}`);
+                        
+                        // Handle standard continuous operations if not using override
+                        if (!operation.overrideoperation && operation.activator.operation.includes('_continuous')) {
+                            const baseOp = operation.activator.operation.replace('_continuous', '');
+                            const value1 = this.getValue(operation.targetself ? obj : targetObj, operation.valuetarget);
+                            const value2 = this.getValue(operation.targetself2 ? obj : targetObj, operation.valuetarget2);
+                            
+                            let newValue = value1;
+                            switch (baseOp) {
+                                case 'add': newValue = value1 + value2; break;
+                                case 'minus': newValue = value1 - value2; break;
+                                case 'multiply': newValue = value1 * value2; break;
+                                case 'divide': newValue = value2 !== 0 ? value1 / value2 : value1; break;
+                                case 'modulus': newValue = value2 !== 0 ? value1 % value2 : value1; break;
+                            }
+                            
+                            this.setValue(operation.targetself ? obj : targetObj, operation.valuetarget, newValue);
+                            console.log(`Updated value to: ${newValue}`);
+                        }
+                    }
+                }
+            }
+
+            tick() {
+                console.log(`\n--- Game Engine Tick (${new Date().toLocaleTimeString()}) ---`);
+                console.log(`Processing ${this.objects.length} objects`);
+                
+                this.tickCount++;
+                this.operationCount = 0;
+                
+                for (let obj of this.objects) {
+                    this.processObject(obj);
+                }
+                
+                console.log('--- Tick Complete ---\n');
+                
+                if (this.ui) {
+                    this.ui.updateUI();
+                }
+            }
+
+            start() {
+                if (this.running) return;
+                
+                this.running = true;
+                console.log('Game Engine Started - Running every 5 seconds');
+                
+                if (this.ui) {
+                    this.ui.addLogEntry('Game Engine Started', 'success');
+                    this.ui.updateStatus();
+                }
+                
+                this.tick();
+                this.tickInterval = setInterval(() => this.tick(), 5000);
+            }
+
+            stop() {
+                if (!this.running) return;
+                
+                this.running = false;
+                if (this.tickInterval) {
+                    clearInterval(this.tickInterval);
+                    this.tickInterval = null;
+                }
+                console.log('Game Engine Stopped');
+                
+                if (this.ui) {
+                    this.ui.addLogEntry('Game Engine Stopped', 'warning');
+                    this.ui.updateStatus();
+                }
+            }
+        }
+
+        // UI Controller
+        class GameEngineUI {
+            constructor() {
+                this.engine = new GameEngine(this);
+                this.selectedObject = null;
+                this.isDragging = false;
+                this.dragOffset = { x: 0, y: 0 };
+                this.setupEventListeners();
+                this.createInitialObjects();
+            }
+
+            setupEventListeners() {
+                document.getElementById('startBtn').addEventListener('click', () => {
+                    this.engine.start();
+                });
+
+                document.getElementById('stopBtn').addEventListener('click', () => {
+                    this.engine.stop();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.resetObjects();
+                });
+
+                document.getElementById('addObjectBtn').addEventListener('click', () => {
+                    this.addSpecificObject();
+                });
+
+                // Add global mouse events for dragging
+                document.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                document.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+                
+                // Prevent default drag behavior on images/text
+                document.addEventListener('dragstart', (e) => e.preventDefault());
+            }
+
+            createInitialObjects() {
+                const testObjects = [
+                    this.createPlayer(new Vector3(250, 250, 0)),
+                    this.createSword(new Vector3(200, 200, 0)),
+                    this.createShield(new Vector3(300, 200, 0)),
+                    this.createPill(new Vector3(150, 300, 0)),
+                    this.createDemon(new Vector3(400, 300, 0))
+                ];
+                testObjects.forEach(obj => this.engine.addObject(obj));
+                this.updateUI();
+            }
+
+            addSpecificObject() {
+                const selectedType = document.getElementById('objectTypeSelect').value;
+                const obj = this.createObjectByType(selectedType);
+                
+                if (obj) {
+                    this.engine.addObject(obj);
+                    this.addLogEntry(`Added ${selectedType} object at random position`, 'success');
+                }
+            }
+
+            createObjectByType(type) {
+                const position = new Vector3(
+                    Math.random() * 400 + 50,
+                    Math.random() * 400 + 50,
+                    0
+                );
+
+                switch (type) {
+                    case 'player':
+                        return this.createPlayer(position);
+                    case 'sword':
+                        return this.createSword(position);
+                    case 'shield':
+                        return this.createShield(position);
+                    case 'pill':
+                        return this.createPill(position);
+                    case 'demon':
+                        return this.createDemon(position);
+                    default:
+                        return null;
+                }
+            }
+
+            createPlayer(position) {
+                const player = new Object();
+                player.tags = ['player', 'entity'];
+                player.position = position;
+                
+                // Player properties
+                player.health = 100;
+                player.maxHealth = 100;
+                player.attack = 0;
+                player.backpack = [];
+                player.equippedleft = null;
+                player.equippedright = null;
+                
+                // Create Value objects for tracking
+                const healthValue = new Value();
+                healthValue.key = 'health';
+                healthValue.value = 100;
+                
+                const attackValue = new Value();
+                attackValue.key = 'attack';
+                attackValue.value = 0;
+                
+                const backpackValue = new Value();
+                backpackValue.key = 'backpack';
+                backpackValue.value = [];
+                backpackValue.valueobject = player;
+                
+                player.values = [healthValue, attackValue, backpackValue];
+
+                // Pickup operation using override
+                const pickupOperation = new Operation();
+                pickupOperation.activator.activation = 'Overlap';
+                pickupOperation.activator.operation = 'pickup_items';
+                pickupOperation.activator.maxdistance = 30;
+                pickupOperation.activator.mindistance = 0;
+                pickupOperation.activator.activatedby.types = ['pickup'];
+                pickupOperation.activator.activatedby.mode = 'dynamic';
+                pickupOperation.overrideoperation = `
+                    if (targetObj && targetObj.tags.includes('pickup')) {
+                        const itemData = {
+                            type: targetObj.tags[0],
+                            name: targetObj.tags[0],
+                            attack: targetObj.attack || 0,
+                            defense: targetObj.defense || 0,
+                            maxdefense: targetObj.maxdefense || 0,
+                            decay: targetObj.decay || 0,
+                            healAmount: targetObj.healAmount || 0
+                        };
+                        
+                        sourceObj.backpack.push(itemData);
+                        removeObject(targetObj.id);
+                        addLogEntry(sourceObj.tags[0] + ' picked up ' + targetObj.tags[0], 'success');
+                        return true;
+                    }
+                    return false;
+                `;
+                
+                // Equipment management operation
+                const equipOperation = new Operation();
+                equipOperation.activator.activation = 'Always';
+                equipOperation.activator.operation = 'manage_equipment';
+                equipOperation.overrideoperation = `
+                    let logMessages = [];
+                    
+                    // Auto-equip sword to left hand
+                    const swordIndex = sourceObj.backpack.findIndex(item => item.type === 'sword');
+                    if (swordIndex !== -1 && !sourceObj.equippedleft) {
+                        sourceObj.equippedleft = sourceObj.backpack[swordIndex];
+                        sourceObj.backpack.splice(swordIndex, 1);
+                        sourceObj.attack += sourceObj.equippedleft.attack;
+                        addLogEntry('Equipped sword (+' + sourceObj.equippedleft.attack + ' attack)', 'success');
+                    }
+                    
+                    // Auto-equip shield to right hand
+                    const shieldIndex = sourceObj.backpack.findIndex(item => item.type === 'shield');
+                    if (shieldIndex !== -1 && !sourceObj.equippedright) {
+                        sourceObj.equippedright = sourceObj.backpack[shieldIndex];
+                        sourceObj.equippedright.defense = sourceObj.equippedright.maxdefense;
+                        sourceObj.backpack.splice(shieldIndex, 1);
+                        addLogEntry('Equipped shield (' + sourceObj.equippedright.defense + ' defense)', 'success');
+                    }
+                    
+                    // Use pills from backpack when health < 50
+                    if (sourceObj.health < 50) {
+                        const pillIndex = sourceObj.backpack.findIndex(item => item.type === 'pill');
+                        if (pillIndex !== -1) {
+                            const pill = sourceObj.backpack[pillIndex];
+                            sourceObj.health = Math.min(sourceObj.maxHealth || 100, sourceObj.health + (pill.healAmount || 10));
+                            sourceObj.backpack.splice(pillIndex, 1);
+                            addLogEntry('Used pill from backpack, healed for ' + (pill.healAmount || 10), 'success');
+                        }
+                    }
+                    
+                    // Handle equipment decay
+                    if (sourceObj.equippedleft && sourceObj.equippedleft.decay !== undefined) {
+                        sourceObj.equippedleft.decay += 0.01;
+                        if (sourceObj.equippedleft.decay >= 1) {
+                            sourceObj.attack -= sourceObj.equippedleft.attack;
+                            sourceObj.equippedleft = null;
+                            addLogEntry('Sword decayed and was destroyed', 'warning');
+                        }
+                    }
+                    
+                    if (sourceObj.equippedright && sourceObj.equippedright.decay !== undefined) {
+                        sourceObj.equippedright.decay += 0.01;
+                        if (sourceObj.equippedright.decay >= 1) {
+                            sourceObj.equippedright = null;
+                            addLogEntry('Shield decayed and was destroyed', 'warning');
+                        }
+                    }
+                    
+                    return true;
+                `;
+
+                // Player attack operation
+                const attackOperation = new Operation();
+                attackOperation.activator.activation = 'inradius';
+                attackOperation.activator.operation = 'attack_demons';
+                attackOperation.activator.maxdistance = 50;
+                attackOperation.activator.mindistance = 0;
+                attackOperation.activator.activatedby.types = ['demon'];
+                attackOperation.activator.activatedby.mode = 'dynamic';
+                attackOperation.overrideoperation = `
+                    if (targetObj && targetObj.tags.includes('demon')) {
+                        let damage = 1 + (sourceObj.attack || 0); // Base 1 + weapon bonuses
+                        targetObj.health -= damage;
+                        targetObj.health = Math.max(0, targetObj.health);
+                        
+                        addLogEntry(sourceObj.tags[0] + ' attacked ' + targetObj.tags[0] + ' for ' + damage + ' damage', 'success');
+                        
+                        if (targetObj.health <= 0) {
+                            removeObject(targetObj.id);
+                            addLogEntry(targetObj.tags[0] + ' was defeated!', 'success');
+                        }
+                        return true;
+                    }
+                    return false;
+                `;
+
+                player.operations = [pickupOperation, equipOperation, attackOperation];
+                return player;
+            }
+
+            createSword(position) {
+                const sword = new Object();
+                sword.tags = ['sword', 'pickup', 'item'];
+                sword.position = position;
+                sword.attack = 10;
+                sword.decay = 0.2;
+                
+                // Create Value objects
+                const attackValue = new Value();
+                attackValue.key = 'attack';
+                attackValue.value = 10;
+                
+                const decayValue = new Value();
+                decayValue.key = 'decay';
+                decayValue.value = 0.2;
+                
+                sword.values = [attackValue, decayValue];
+                sword.operations = [];
+                return sword;
+            }
+
+            createShield(position) {
+                const shield = new Object();
+                shield.tags = ['shield', 'pickup', 'item'];
+                shield.position = position;
+                shield.defense = 10;
+                shield.maxdefense = 30;
+                shield.decay = 0.1;
+                
+                // Create Value objects
+                const defenseValue = new Value();
+                defenseValue.key = 'defense';
+                defenseValue.value = 10;
+                
+                const maxDefenseValue = new Value();
+                maxDefenseValue.key = 'maxdefense';
+                maxDefenseValue.value = 30;
+                
+                const decayValue = new Value();
+                decayValue.key = 'decay';
+                decayValue.value = 0.1;
+                
+                shield.values = [defenseValue, maxDefenseValue, decayValue];
+                shield.operations = [];
+                return shield;
+            }
+
+            createPill(position) {
+                const pill = new Object();
+                pill.tags = ['pill', 'pickup', 'item'];
+                pill.position = position;
+                pill.healAmount = 10;
+                
+                // Create Value objects
+                const healValue = new Value();
+                healValue.key = 'healAmount';
+                healValue.value = 10;
+                
+                pill.values = [healValue];
+
+                // Pill healing operation using override
+                const healOperation = new Operation();
+                healOperation.activator.activation = 'inradius';
+                healOperation.activator.operation = 'heal_low_health';
+                healOperation.activator.maxdistance = 50;
+                healOperation.activator.mindistance = 0;
+                healOperation.activator.activatedby.types = ['player'];
+                healOperation.activator.activatedby.mode = 'dynamic';
+                healOperation.overrideoperation = `
+                    if (targetObj && targetObj.tags.includes('player') && targetObj.health < 50) {
+                        const healAmount = sourceObj.healAmount || 10;
+                        targetObj.health = Math.min(targetObj.maxHealth || 100, targetObj.health + healAmount);
+                        addLogEntry('Pill healed ' + targetObj.tags[0] + ' for ' + healAmount, 'success');
+                        removeObject(sourceObj.id);
+                        return true;
+                    }
+                    return false;
+                `;
+
+                pill.operations = [healOperation];
+                return pill;
+            }
+
+            createDemon(position) {
+                const demon = new Object();
+                demon.tags = ['demon', 'enemy', 'entity'];
+                demon.position = position;
+                demon.health = 100;
+                demon.maxHealth = 100;
+                demon.attack = 10;
+                
+                // Create Value objects
+                const healthValue = new Value();
+                healthValue.key = 'health';
+                healthValue.value = 100;
+                
+                const attackValue = new Value();
+                attackValue.key = 'attack';
+                attackValue.value = 10;
+                
+                demon.values = [healthValue, attackValue];
+
+                // Demon attack operation using override
+                const attackOperation = new Operation();
+                attackOperation.activator.activation = 'inradius';
+                attackOperation.activator.operation = 'attack_player';
+                attackOperation.activator.maxdistance = 60;
+                attackOperation.activator.mindistance = 0;
+                attackOperation.activator.activatedby.types = ['player'];
+                attackOperation.activator.activatedby.mode = 'dynamic';
+                attackOperation.overrideoperation = `
+                    if (targetObj && targetObj.tags.includes('player')) {
+                        let damage = sourceObj.attack || 10;
+                        
+                        // Check if player has shield equipped
+                        if (targetObj.equippedright && targetObj.equippedright.type === 'shield') {
+                            let shield = targetObj.equippedright;
+                            shield.defense -= damage;
+                            
+                            if (shield.defense <= 0) {
+                                // Shield is destroyed, excess damage goes to health
+                                let excessDamage = Math.abs(shield.defense);
+                                targetObj.equippedright = null;
+                                targetObj.health -= excessDamage;
+                                addLogEntry('Shield destroyed! ' + excessDamage + ' excess damage to health', 'warning');
+                            } else {
+                                addLogEntry('Shield absorbed ' + damage + ' damage (defense: ' + shield.defense + ')', 'info');
+                            }
+                        } else {
+                            // No shield, damage health directly
+                            targetObj.health -= damage;
+                            addLogEntry(sourceObj.tags[0] + ' dealt ' + damage + ' damage to ' + targetObj.tags[0], 'warning');
+                        }
+                        
+                        targetObj.health = Math.max(0, targetObj.health);
+                        
+                        if (targetObj.health <= 0) {
+                            addLogEntry(targetObj.tags[0] + ' was defeated by ' + sourceObj.tags[0] + '!', 'error');
+                        }
+                        
+                        return true;
+                    }
+                    return false;
+                `;
+
+                demon.operations = [attackOperation];
+                return demon;
+            }
+
+            updateUI() {
+                this.renderObjects();
+                this.updateObjectDetails();
+                this.updateStats();
+            }
+
+            renderObjects() {
+                const canvas = document.getElementById('worldCanvas');
+                canvas.innerHTML = '';
+
+                this.engine.objects.forEach(obj => {
+                    const element = document.createElement('div');
+                    element.className = `object ${obj.tags[0]}`;
+                    element.id = `obj-${obj.id}`;
+                    
+                    const size = obj.tags[0] === 'player' ? 40 : obj.tags[0] === 'demon' ? 35 : 30;
+                    element.style.width = `${size}px`;
+                    element.style.height = `${size}px`;
+                    element.style.left = `${obj.position.x - size/2}px`;
+                    element.style.top = `${obj.position.y - size/2}px`;
+                    element.style.cursor = 'grab';
+                    
+                    const emoji = obj.tags[0] === 'player' ? '👤' : 
+                                 obj.tags[0] === 'demon' ? '👹' : 
+                                 obj.tags[0] === 'sword' ? '⚔️' : 
+                                 obj.tags[0] === 'shield' ? '🛡️' : 
+                                 obj.tags[0] === 'pill' ? '💊' : '❓';
+                    element.textContent = emoji;
+                    
+                    // Add selection highlight if this is the selected object
+                    if (this.selectedObject && this.selectedObject.id === obj.id) {
+                        element.classList.add('selected');
+                    }
+                    
+                    // Add mouse event listeners for dragging
+                    element.addEventListener('mousedown', (e) => this.handleMouseDown(e, obj));
+                    element.addEventListener('click', (e) => {
+                        if (!this.isDragging) {
+                            this.selectObject(obj);
+                        }
+                    });
+
+                    canvas.appendChild(element);
+
+                    obj.operations.forEach(operation => {
+                        if (operation.activator.maxdistance > 0) {
+                            const range = document.createElement('div');
+                            range.className = 'range-indicator';
+                            const rangeSize = operation.activator.maxdistance * 2;
+                            range.style.width = `${rangeSize}px`;
+                            range.style.height = `${rangeSize}px`;
+                            range.style.left = `${obj.position.x - rangeSize/2}px`;
+                            range.style.top = `${obj.position.y - rangeSize/2}px`;
+                            
+                            // Highlight range for selected object
+                            if (this.selectedObject && this.selectedObject.id === obj.id) {
+                                range.classList.add('active');
+                            }
+                            
+                            canvas.appendChild(range);
+                        }
+                    });
+                });
+            }
+
+            handleMouseDown(e, obj) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                this.isDragging = true;
+                this.selectedObject = obj;
+                
+                const canvas = document.getElementById('worldCanvas');
+                const canvasRect = canvas.getBoundingClientRect();
+                const element = document.getElementById(`obj-${obj.id}`);
+                
+                // Calculate offset from mouse to object center
+                this.dragOffset.x = e.clientX - canvasRect.left - obj.position.x;
+                this.dragOffset.y = e.clientY - canvasRect.top - obj.position.y;
+                
+                // Add dragging class for visual feedback
+                element.classList.add('dragging');
+                
+                // Update UI to show selection
+                this.updateUI();
+                
+                this.addLogEntry(`Started dragging ${obj.tags[0]}`, 'info');
+            }
+
+            handleMouseMove(e) {
+                if (!this.isDragging || !this.selectedObject) return;
+                
+                e.preventDefault();
+                
+                const canvas = document.getElementById('worldCanvas');
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                // Calculate new position relative to canvas
+                const newX = e.clientX - canvasRect.left - this.dragOffset.x;
+                const newY = e.clientY - canvasRect.top - this.dragOffset.y;
+                
+                // Constrain to canvas bounds
+                const canvasWidth = canvas.clientWidth;
+                const canvasHeight = canvas.clientHeight;
+                const constrainedX = Math.max(20, Math.min(canvasWidth - 20, newX));
+                const constrainedY = Math.max(20, Math.min(canvasHeight - 20, newY));
+                
+                // Update object position
+                this.selectedObject.position.x = constrainedX;
+                this.selectedObject.position.y = constrainedY;
+                
+                // Re-render to show new position
+                this.renderObjects();
+                this.updateObjectDetails();
+            }
+
+            handleMouseUp(e) {
+                if (!this.isDragging) return;
+                
+                this.isDragging = false;
+                
+                if (this.selectedObject) {
+                    const element = document.getElementById(`obj-${this.selectedObject.id}`);
+                    if (element) {
+                        element.classList.remove('dragging');
+                    }
+                    
+                    this.addLogEntry(`Moved ${this.selectedObject.tags[0]} to (${Math.round(this.selectedObject.position.x)}, ${Math.round(this.selectedObject.position.y)})`, 'success');
+                    
+                    // Final render to ensure everything is in sync
+                    this.updateUI();
+                }
+            }
+
+            selectObject(obj) {
+                this.selectedObject = obj;
+                this.updateObjectDetails();
+                this.addLogEntry(`Selected ${obj.tags[0]} object`, 'info');
+                
+                // Re-render to apply selection styling
+                this.renderObjects();
+            }
+
+            updateObjectDetails() {
+                const container = document.getElementById('objectDetails');
+                container.innerHTML = '';
+
+                // Sort objects to show selected object first
+                const sortedObjects = [...this.engine.objects].sort((a, b) => {
+                    if (this.selectedObject) {
+                        if (a.id === this.selectedObject.id) return -1;
+                        if (b.id === this.selectedObject.id) return 1;
+                    }
+                    return 0;
+                });
+
+                sortedObjects.forEach(obj => {
+                    const info = document.createElement('div');
+                    info.className = `object-info ${obj.tags[0]}`;
+                    
+                    // Add extra styling for selected object
+                    if (this.selectedObject && obj.id === this.selectedObject.id) {
+                        info.style.border = '2px solid #FFD700';
+                        info.style.boxShadow = '0 0 15px rgba(255, 215, 0, 0.3)';
+                        info.style.background = 'rgba(255, 215, 0, 0.1)';
+                    }
+                    
+                    const header = document.createElement('h4');
+                    header.innerHTML = `
+                        <span>${obj.tags[0].charAt(0).toUpperCase() + obj.tags[0].slice(1)} ${this.selectedObject && obj.id === this.selectedObject.id ? '⭐' : ''}</span>
+                        <span style="font-size: 12px; opacity: 0.7;">${obj.id.substring(0, 6)}</span>
+                    `;
+                    info.appendChild(header);
+
+                    const tags = document.createElement('div');
+                    obj.tags.forEach(tag => {
+                        if (tag) {
+                            const tagEl = document.createElement('span');
+                            tagEl.className = 'tag';
+                            tagEl.textContent = tag;
+                            tags.appendChild(tagEl);
+                        }
+                    });
+                    info.appendChild(tags);
+
+                    if (obj.health !== undefined) {
+                        const healthDiv = document.createElement('div');
+                        const healthPercent = Math.max(0, Math.min(100, (obj.health / (obj.maxHealth || 100)) * 100));
+                        healthDiv.innerHTML = `
+                            <div class="property">
+                                <span>Health:</span>
+                                <span class="property-value">${Math.round(obj.health)}/${obj.maxHealth || 100}</span>
+                            </div>
+                            <div class="health-bar">
+                                <div class="health-fill" style="width: ${healthPercent}%"></div>
+                            </div>
+                        `;
+                        info.appendChild(healthDiv);
+                    }
+
+                    // Show additional properties for different object types
+                    const properties = ['attack', 'defense', 'maxdefense', 'healAmount', 'decay'];
+                    properties.forEach(prop => {
+                        if (obj[prop] !== undefined) {
+                            const propDiv = document.createElement('div');
+                            propDiv.className = 'property';
+                            propDiv.innerHTML = `
+                                <span>${prop.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</span>
+                                <span class="property-value">${typeof obj[prop] === 'number' ? Math.round(obj[prop] * 100) / 100 : obj[prop]}</span>
+                            `;
+                            info.appendChild(propDiv);
+                        }
+                    });
+
+                    // Show equipment for player
+                    if (obj.tags.includes('player')) {
+                        if (obj.equippedleft) {
+                            const leftDiv = document.createElement('div');
+                            leftDiv.className = 'property';
+                            leftDiv.innerHTML = `
+                                <span>Left Hand:</span>
+                                <span class="property-value">${obj.equippedleft.name} (+${obj.equippedleft.attack} ATK)</span>
+                            `;
+                            info.appendChild(leftDiv);
+                        }
+                        
+                        if (obj.equippedright) {
+                            const rightDiv = document.createElement('div');
+                            rightDiv.className = 'property';
+                            rightDiv.innerHTML = `
+                                <span>Right Hand:</span>
+                                <span class="property-value">${obj.equippedright.name} (${obj.equippedright.defense}/${obj.equippedright.maxdefense} DEF)</span>
+                            `;
+                            info.appendChild(rightDiv);
+                        }
+                        
+                        if (obj.backpack && obj.backpack.length > 0) {
+                            const backpackDiv = document.createElement('div');
+                            backpackDiv.className = 'property';
+                            backpackDiv.innerHTML = `
+                                <span>Backpack:</span>
+                                <span class="property-value">${obj.backpack.map(item => item.name).join(', ')}</span>
+                            `;
+                            info.appendChild(backpackDiv);
+                        }
+                    }
+
+                    const posDiv = document.createElement('div');
+                    posDiv.className = 'property';
+                    posDiv.innerHTML = `
+                        <span>Position:</span>
+                        <span class="property-value">(${Math.round(obj.position.x)}, ${Math.round(obj.position.y)})</span>
+                    `;
+                    info.appendChild(posDiv);
+
+                    if (obj.operations.length > 0) {
+                        const opsDiv = document.createElement('div');
+                        opsDiv.className = 'property';
+                        opsDiv.innerHTML = `
+                            <span>Operations:</span>
+                            <span class="property-value">${obj.operations.length}</span>
+                        `;
+                        info.appendChild(opsDiv);
+                    }
+
+                    // Show Value objects count
+                    if (obj.values && obj.values.length > 0) {
+                        const valuesDiv = document.createElement('div');
+                        valuesDiv.className = 'property';
+                        valuesDiv.innerHTML = `
+                            <span>Values:</span>
+                            <span class="property-value">${obj.values.length}</span>
+                        `;
+                        info.appendChild(valuesDiv);
+                    }
+
+                    container.appendChild(info);
+                });
+            }
+
+            updateStats() {
+                document.getElementById('tickCounter').textContent = this.engine.tickCount;
+                document.getElementById('objectCount').textContent = this.engine.objects.length;
+                document.getElementById('operationCount').textContent = this.engine.operationCount;
+            }
+
+            updateStatus() {
+                const indicator = document.getElementById('statusIndicator');
+                const startBtn = document.getElementById('startBtn');
+                const stopBtn = document.getElementById('stopBtn');
+                
+                if (this.engine.running) {
+                    indicator.className = 'status-indicator running';
+                    startBtn.classList.remove('active');
+                    stopBtn.classList.add('active');
+                } else {
+                    indicator.className = 'status-indicator stopped';
+                    startBtn.classList.remove('active');
+                    stopBtn.classList.remove('active');
+                }
+            }
+
+            addLogEntry(message, type = 'info') {
+                const log = document.getElementById('activityLog');
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                
+                const timestamp = new Date().toLocaleTimeString();
+                entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+                
+                log.insertBefore(entry, log.firstChild);
+                
+                while (log.children.length > 50) {
+                    log.removeChild(log.lastChild);
+                }
+            }
+
+            resetObjects() {
+                this.engine.objects = [];
+                this.engine.tickCount = 0;
+                this.engine.operationCount = 0;
+                this.selectedObject = null;
+                
+                this.createInitialObjects();
+                this.addLogEntry('Objects reset to initial state', 'info');
+            }
+        }
+
+        // Initialize the UI when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.gameUI = new GameEngineUI();
+            
+            window.gameUI.addLogEntry('Game Engine UI Initialized (Override Operations)', 'success');
+            window.gameUI.addLogEntry('Using override operations with Value objects for complex game logic', 'info');
+            window.gameUI.addLogEntry('Move player near items to test pickup system', 'info');
+            window.gameUI.addLogEntry('Pills heal players with health < 50 automatically', 'info');
+            window.gameUI.addLogEntry('Move player near demon to test combat system (both ways!)', 'info');
+            window.gameUI.addLogEntry('All mechanics work through custom override operations', 'info');
+        });
+    </script>
+</body>
+</html>

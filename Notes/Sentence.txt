@@ -1,0 +1,98 @@
+Core Elements
+Subject (S) - The person, thing, or concept that performs the action or is being described. It's who or what the sentence is about.
+
+The dog barked.
+Sarah is reading.
+
+Verb (V) - The action word or state of being that tells us what the subject does or what condition it's in.
+
+The dog barked.
+Sarah is reading.
+
+Object (O) - Receives the action of the verb. There are two types:
+
+Direct Object - directly receives the action: "Sarah reads a book"
+Indirect Object - tells us to whom or for whom the action is done: "Sarah gave her friend a book"
+
+Complement (C) - Completes the meaning of the verb by describing or renaming the subject or object.
+
+Subject complement: "Sarah is a teacher" (describes Sarah)
+Object complement: "We painted the house blue" (describes the house)
+
+Adjunct (A) - Adds extra information about when, where, how, or why something happens. These are optional elements that provide context.
+
+"Sarah reads in the library" (where)
+"Yesterday, Sarah read a book" (when)
+"Sarah reads carefully" (how)
+
+How Each Pattern Works
+SV: Basic action - "Birds fly"
+SVO: Action with a target - "Birds eat seeds"
+SVC: Describes the subject - "Birds are beautiful"
+SVA: Action with context - "Birds fly south"
+SVOC: Action that changes the object - "We consider birds amazing"
+SVOA: Action with target and context - "Birds build nests carefully"
+SVIODO: Giving or showing something to someone - "Birds teach their young survival skills"
+The patterns with A at the beginning simply add contextual information at the start:
+ASVC: "Every spring, birds are active"
+ASVO: "In winter, birds eat berries"
+The patterns with multiple adjuncts (AA) include additional contextual details like time, place, manner, or reason all in one sentence.
+
+what
+why
+where
+who
+how
+which
+when
+
+i 
+
+I want to give money to people in need
+I= subject
+want to =future action
+give= action
+money = object
+people = direct object
+in need = description
+
+why= poor
+poor = hard life/ starvation/death
+
+Views
+giving poor = good
+    sub branch= giving poor that use money for bad things = bad
+
+Subject + Verb (SV)
+Subject + Verb + Object (SVO)
+Subject + Verb + Complement (SVC)
+Subject + Verb + Adjunct (SVA)
+Subject + Verb + Object + Complement (SVOC)
+Subject + Verb + Object + Adjunct (SVOA)
+Subject + Verb + Indirect Object + Direct Object (SVIODO)
+Adjunct + Subject + Verb + Complement (ASVC)
+Adjunct + Subject + Verb + Object (ASVO)
+Adjunct + Subject + Verb + Indirect Object + Direct Object (ASVIODO)
+Subject + Verb + Adjunct + Adjunct (SVAA)
+Adjunct + Subject + Verb + Adjunct + Adjunct (ASVAA)
+
+
+based on these patterns, i want to create a function that can process a sentence and return the pattern that it fits into.
+use also the wordprocessor since context creates tags for the words and the wordprocessor can process the words and correct words to use
+
+
+
+
+
+Objects uses the Evaluator and Values to get variables like details, appearance, position, pretty mch everythg about an object/person/place
+there are also global Values using the same system like Time which runs indefinitely
+there is also Actions
+there is also Universal
+
+then use the a system that can process functions that makes sentences/semantics that give necessary information for conversation
+
+
+
+desire?
+
+small wound not an issue
