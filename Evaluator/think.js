@@ -164,6 +164,7 @@ class Action extends Operation {
 
 
 // Ideology as value system, is only used for checking (acts like wights)
+//which is bad and good this is how decisions are made
 class Ideology {
     constructor() {
         this.good_values = []; // Array of Value objects
@@ -173,19 +174,6 @@ class Ideology {
 }
 
 
-
-// Words/Context as memory-embedded values
-class ContextualValue extends Value {
-    constructor() {
-        super();
-        this.embedded_memories = []; // Array of Memory references
-        this.context_tags = new MultiType();
-
-        //embedded values acts as which variables and avlues makes this reasonable or connected to this
-        this.embedded_values = [];
-        this.embedded_operations=[]
-    }
-}
 
 //CATEGORIZATION and CONTEXT classes might not be needed as they might already be juist values but interconnected
 //need standard or buil-in activator so that something can be categorized on its own

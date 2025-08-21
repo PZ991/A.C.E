@@ -120,3 +120,32 @@ function Type() {
 function Values() {
     return new Value();
 }
+
+
+
+
+// Individual context value that defines how a specific value should be evaluated
+class ContextValue {
+    constructor() {
+        this.contextname='';
+        this.embedded_memories = []; // Array of Memory references
+        this.context_tags = new MultiType();
+
+        //embedded values acts as which variables and avlues makes this reasonable or connected to this
+        this.embedded_values = [];
+        this.embedded_operations=[];
+
+
+        this.valuesconnected=[] ; // The value to check (reference to object's value)
+        this.comparisonType = []; // 'equal', 'grth', 'lsth', 'inrange'
+        this.requirementLevel = []; // 'required', 'minor', 'not_required'
+        this.targetValue = []; // The value to compare against
+        this.extraConsiderationRange = []; // Additional range for 'minor' requirement level
+
+        this.dissipationvalueranges=[]; //values to meet to calcel out this context
+        this.convertible = false //whether this context will become a value and replace the embedded values on the target once the conditions are met
+    }
+}
+//CONTEXT, Values should also be context
+//values can be a context
+//context will ve added to an object if the values meet the context 
