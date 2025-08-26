@@ -31,7 +31,6 @@ class Memory extends Value {
         this.sequence = [];                                                             // Array of Value references
         this.variables_affected = [];                                                   // Array of Value references
         this.variables_needed = [];                                                     // Array of Value references
-        this.emotions_affected = [];                                                    // Array of {emotion: Value, target: Value}
     }
 }
 
@@ -66,29 +65,4 @@ class Ideology {
     }
 }
 
-
-
-
-// Using Memory's variables_affected for complex relationships
-let stressMemory = new Memory();
-stressMemory.variables_affected = [
-    new Value('happiness', 50),     // Stress affects happiness
-    new Value('health', 80),        // Stress affects health
-    new Value('focus', 60)          // Stress affects focus
-];
-
-// Using Action's memory sequence for action consequences
-let exerciseAction = new Memory();
-exerciseAction.sequence = [
-    { operation: new Operation(),operation: new Operation() },
-    {operation: new Operation(),operation: new Operation() },
-    { operation: new Operation(),operation: new Operation(),operation: new Operation() }
-];
-
-// Memory sequence outputs
-let learningSequence = new Memory();
-learningSequence.output_variables = [
-    new Value('attention', 'increase'),    
-    new Value('understanding', 'decrease'),  
-];
 
